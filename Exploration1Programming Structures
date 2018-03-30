@@ -1,0 +1,20 @@
+#3
+
+procedure a_function (a,b)
+
+display a+b
+display a-b
+display a/b
+display a*b
+
+#4
+a <- input ()
+
+p <- 1
+
+REPEAT UNTIL a = 1
+
+p <- p*a
+a <- a-1
+
+#5
