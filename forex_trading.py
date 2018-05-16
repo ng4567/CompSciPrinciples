@@ -28,6 +28,7 @@ def select_brokerage():
 if brokerage_or_not == "1":
     brokerage_name = select_brokerage()
 else: #code in here a mechanism that allows the user to code in a new brokerage
+        #see https://stackoverflow.com/questions/31891286/keeping-the-data-of-a-variable-between-runs-of-code
 
 
 
