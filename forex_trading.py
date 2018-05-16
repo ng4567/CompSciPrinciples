@@ -1,6 +1,46 @@
 author = 'Nikhil Gopal'
 from forex_python.converter import  CurrencyRates
 from heapq import nlargest
+import pickle
+
+#initialize a variable to tell the computer to select a brokerage or to create a new one
+brokerage_or_not = raw_input("welcome, please press type 1 to select a brokerage, or anything else to create a new one ")
+
+#dictionary that holds all the information on brokerages format: account balance, maximum leverage as multiplied by acccount balance, commission fee, commmission fee as percent of loss/gain
+forex_brokerages_dictionary = {"Oanda":[100,50,1,0],"TDAmeritrade":[5,000,100,3,0]}
+
+#function that allows the user to select their brokerage
+def select_brokerage():
+    while 4 != 5:
+
+        x = raw_input("press 1 to show the names of the brokerages or press anything else to input a name ")
+
+        if x == "1":
+            print forex_brokerages_dictionary.keys()
+        else:
+            brokerage_name = raw_input("input a brokerage name ")
+            if brokerage_name in forex_brokerages_dictionary:
+                return brokerage_name
+            else:
+                print "that is not a brokerage on file, the brokerages on file are: " + str(forex_brokerages_dictionary.keys())
+
+
+if brokerage_or_not == "1":
+    brokerage_name = select_brokerage()
+else: #code in here a mechanism that allows the user to code in a new brokerage
+
+
+
+
+
+
+file_handle = "brokerage-names.pk"
+with open(file_handle, 'wb') as fh:
+    pickle.dump(forex_brokerages_dictionary, fh)
+
+
+
+
 
 c = CurrencyRates() #initialize the exchange rates for every currency
 
@@ -42,4 +82,5 @@ three_best_currency_pairs = nlargest(3,dictionary_of_notable_pairs_absolute_valu
 three_best_currency_pairs
 
 print "The three best currency pairs to trade with USD as a starting currency are: " + three_best_currency_pairs[0] + ", " + three_best_currency_pairs[1] + ", " + three_best_currency_pairs[2]
+
 
