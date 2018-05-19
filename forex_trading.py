@@ -20,17 +20,24 @@ def select_brokerage():
         if x == "1": #show the names of the brokerages
             with open(file_handle, "rb") as fh: #open the file that contains the list of brokerages
                 temp_list = pickle.load(fh) #read the values of the list
+            print 'Brokerages on file (account balance, max leverage, commision fee, commmission as percent of trade: '
             print temp_list
         elif x == "q": #quit the program
             print "the script has stopped"
             exit()
         else: #check to make sure the brokerage exists on file, and selects it if it is, forces user to do it again if not
             brokerage_name = raw_input("input a brokerage name ")
-            if brokerage_name in forex_brokerages_dictionary:
+
+            with open(file_handle, 'rb') as fh:
+                temp_list = pickle.load(fh)
+
+            if brokerage_name in temp_list:
                 return brokerage_name
             else:
-                print "that is not a brokerage on file, the brokerages on file are: " + str(forex_brokerages_dictionary.keys())
+                with open(file_handle, "rb") as fh:
+                    temp_list = pickle.load(fh)
 
+                print "that is not a brokerage on file, the brokerages on file are: " + str(temp_list.keys())
 
 if brokerage_or_not == "1": #select a brokerage
     brokerage_name = select_brokerage()

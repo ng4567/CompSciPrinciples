@@ -1,12 +1,12 @@
 (dp0
-S'Oanda'
+S"Oanda"
 p1
 (lp2
 I100
 aI50
 aI1
 aI0
-asS'TDAmeritrade'
+asS"TDAmeritrade"
 p3
 (lp4
 I5
@@ -14,7 +14,7 @@ aI0
 aI100
 aI3
 aI0
-asS'Ally'
+asS"Ally"
 p5
 (lp6
 F6000.0
