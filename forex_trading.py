@@ -1,5 +1,6 @@
 author = 'Nikhil Gopal'
-from forex_python.converter import  CurrencyRates
+from forex_python.converter import CurrencyRates
+c = CurrencyRates() #initialize the exchange rates for every currency
 from heapq import nlargest
 import pickle
 
@@ -11,15 +12,21 @@ brokerage_or_not = raw_input("welcome, please press type 1 to select a brokerage
 #dictionary that holds all the information on brokerages format: account balance, maximum leverage as multiplied by acccount balance, commission fee, commmission fee as percent of loss/gain
 forex_brokerages_dictionary = {}
 
-#function that allows the user to select their brokerage
+#function that allows the user to select their brokerage, returns the selected
 def select_brokerage():
+
+    with open(file_handle, 'rb') as fh: #initiate retrieves saved brokerages from file so that they can be used later
+        temp_list = pickle.load(fh)
+    forex_brokerages_dictionary = temp_list #saves the brokerages to a list that can be used later
+
+
     while 4 != 5:
 
         x = raw_input("press 1 to show the names of the brokerages, press q to quit or press anything else to input a name ")
 
         if x == "1": #show the names of the brokerages
             with open(file_handle, "rb") as fh: #open the file that contains the list of brokerages
-                temp_list = pickle.load(fh) #read the values of the list
+                temp_list = pickle.load(fh) #read the values of the list to print them
             print 'Brokerages on file (account balance, max leverage, commision fee, commmission as percent of trade: '
             print temp_list
         elif x == "q": #quit the program
@@ -28,20 +35,22 @@ def select_brokerage():
         else: #check to make sure the brokerage exists on file, and selects it if it is, forces user to do it again if not
             brokerage_name = raw_input("input a brokerage name ")
 
-            with open(file_handle, 'rb') as fh:
-                temp_list = pickle.load(fh)
-
-            if brokerage_name in temp_list:
+            if brokerage_name in forex_brokerages_dictionary:
+                print "brokerage selected: " + brokerage_name
                 return brokerage_name
             else:
-                with open(file_handle, "rb") as fh:
-                    temp_list = pickle.load(fh)
 
-                print "that is not a brokerage on file, the brokerages on file are: " + str(temp_list.keys())
+                print "that is not a brokerage on file, the brokerages on file are: " + str(forex_brokerages_dictionary.keys())
 
-if brokerage_or_not == "1": #select a brokerage
+
+with open(file_handle, 'rb') as fh:
+    temporary_dictionary = pickle.load(fh)
+forex_brokerages_dictionary = temporary_dictionary
+
+
+if brokerage_or_not == "1": #select a brokerage, get the brokerage's name in a variable
     brokerage_name = select_brokerage()
-elif brokerage_or_not == 'q': #quit
+elif brokerage_or_not == 'q': #quit program if user wants
     print "the script has stopped"
     exit()
 else: #user inputs a new brokerage #code in here a mechanism that allows the user to code in a new brokerage see https://stackoverflow.com/questions/31891286/keeping-the-data-of-a-variable-between-runs-of-code
@@ -54,17 +63,16 @@ else: #user inputs a new brokerage #code in here a mechanism that allows the use
     forex_brokerages_dictionary[new_brokerage_name] = [float(new_brokerage_balance), float(new_brokerage_max_leverage), float(new_brokerage_commission_fee), float(new_brokerage_commission_fee_as_percent)]
 
     print "New brokerage " + new_brokerage_name + " added."
-    print "the script has stopped"
-    exit()
-
-#open the pickle file to store any made brokerages
-with open(file_handle, 'wb') as fh:
-    pickle.dump(forex_brokerages_dictionary, fh)
+    brokerage_name = new_brokerage_name
 
 
+
+
+
+#this function returns the most profitable currency pair, also prints the second and third most profitable
 def calculate_best_forex_trade():
 
-    c = CurrencyRates() #initialize the exchange rates for every currency
+
 
     USD_rates = c.get_rates('USD') #USD is the base currency becuase that is what I use as  US resident, can change to suit your own needs
 
@@ -106,3 +114,60 @@ def calculate_best_forex_trade():
 
     return three_best_currency_pairs[0] #return the most profitable currency pair
 
+
+best_trade = "ZAR/TRY" #calculate_best_forex_trade() uncomment later, don't want to run full function to save time
+currency_to_buy_with_dollars = best_trade[0:3]
+currency_to_buy_second = best_trade[4:7]
+
+
+
+def make_currency_trade(currency1,currency2,brokerage_info):
+
+    #multiply the account balance times the exchange rate of the first currency, we buy this much of the first currency with dollars
+    first_exchange_rate = c.get_rate('USD', currency1)
+    amount_bought_of_currency_1 = first_exchange_rate * brokerage_info[0] #multiply exchange rate of currency 1 * account balance to get how much currency is bought
+    second_exchange_rate = c.get_rate(currency_to_buy_with_dollars,currency2)
+    amount_bought_of_second_currency = second_exchange_rate * amount_bought_of_currency_1
+    exchange_rate_to_convert_back_to_USD = c.get_rate(currency2, 'USD')
+    dollars_at_end_of_trade = exchange_rate_to_convert_back_to_USD * amount_bought_of_second_currency
+
+    profit_made = dollars_at_end_of_trade - brokerage_info[0]
+    profit_made -= float(brokerage_info[2])
+    profit_made -= profit_made * float(brokerage_info[3])
+
+    potential_profit_using_leverage = profit_made * float(brokerage_info[1])
+
+    return profit_made, potential_profit_using_leverage
+
+x = make_currency_trade(currency_to_buy_with_dollars,currency_to_buy_second,forex_brokerages_dictionary[brokerage_name])
+
+
+#series of print statements that shows the user what the profit margins look like
+print ''
+print "potential profit made: " + str(x[0])
+print "potential profit made using max amount of leverage: " + str(x[1])
+print ''
+
+make_trade_or_not = raw_input('Type y to make this trade or anything else to stop. If you do, your account balance will be updated?')
+
+
+if make_trade_or_not == "y":
+    leverage_or_not = raw_input('Type y to use leverage or anything else to not use leverage')
+    if leverage_or_not == "y":
+        forex_brokerages_dictionary[brokerage_name][0] += x[1] #update the new account balance with profit made (using leverage)
+        print ""
+        print "your account balance is: " + str(forex_brokerages_dictionary[brokerage_name][0])
+        print ''
+        print "the script has stopped"
+    else:
+        forex_brokerages_dictionary[brokerage_name][0] += x[0] #update the new account balance with the profit made (without leverage)
+        print ""
+        print "your account balance is: " + str(forex_brokerages_dictionary[brokerage_name][0])
+        print ''
+        print "the script has stopped"
+else:
+    print 'the script has stopped'
+
+#open the pickle file and stores newly made brokerages
+with open(file_handle, 'wb') as fh:
+    pickle.dump(forex_brokerages_dictionary, fh)
